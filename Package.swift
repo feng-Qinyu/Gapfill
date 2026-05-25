@@ -2,13 +2,13 @@
 import PackageDescription
 
 let package = Package(
-    name: "EnglishCloze",
+    name: "Gapfill",
     platforms: [
         .macOS(.v13)
     ],
     targets: [
         .executableTarget(
-            name: "EnglishCloze",
+            name: "Gapfill",
             path: "Sources",
             swiftSettings: [
                 .unsafeFlags(["-swift-version", "5"])

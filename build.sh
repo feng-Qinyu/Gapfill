@@ -12,4 +12,4 @@ echo "▶︎ 生成 Xcode 工程…"
 xcodegen generate
 
 echo "▶︎ 打开 Xcode，按 Cmd-R 运行即可。"
-open EnglishCloze.xcodeproj
+open Gapfill.xcodeproj

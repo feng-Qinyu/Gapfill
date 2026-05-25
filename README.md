@@ -42,17 +42,17 @@
 ### 方案 A：Swift Package Manager（无需 Xcode）
 
 ```bash
-git clone https://github.com/feng-Qinyu/EnglishCloze.git
-cd EnglishCloze
+git clone https://github.com/feng-Qinyu/Gapfill.git
+cd Gapfill
 swift build -c release
 ```
 
 构建完成后创建 app bundle：
 
 ```bash
-APP="$HOME/Applications/EnglishCloze.app"
+APP="$HOME/Applications/Gapfill.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp .build/release/EnglishCloze "$APP/Contents/MacOS/"
+cp .build/release/Gapfill "$APP/Contents/MacOS/"
 cp Resources/Info.plist "$APP/Contents/"
 codesign --force --deep --sign - "$APP"
 ```
@@ -69,16 +69,16 @@ brew install xcodegen
 
 ```bash
 # 创建 LaunchAgent（开机自动启动）
-cat > ~/Library/LaunchAgents/com.example.EnglishCloze.plist << 'EOF'
+cat > ~/Library/LaunchAgents/com.example.Gapfill.plist << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.example.EnglishCloze</string>
+    <string>com.example.Gapfill</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Applications/EnglishCloze.app/Contents/MacOS/EnglishCloze</string>
+        <string>/Applications/Gapfill.app/Contents/MacOS/Gapfill</string>
     </array>
     <key>RunAtLoad</key>
     <true/>
@@ -88,11 +88,11 @@ cat > ~/Library/LaunchAgents/com.example.EnglishCloze.plist << 'EOF'
 </plist>
 EOF
 
-launchctl load ~/Library/LaunchAgents/com.example.EnglishCloze.plist
+launchctl load ~/Library/LaunchAgents/com.example.Gapfill.plist
 ```
 
 > **macOS 安全提示**：如果 Finder 双击无反应，通过终端启动一次：  
-> `open /Applications/EnglishCloze.app`  
+> `open /Applications/Gapfill.app`  
 > 或使用上方的 LaunchAgent 方案（推荐，完全绕开 Gatekeeper）。
 
 ## 使用说明
@@ -137,7 +137,7 @@ Sources/
 └── CodexGenerator.swift    # 调 Codex CLI 后台生成新题
 ```
 
-**数据存储**：`~/Library/Application Support/EnglishCloze/state.json`
+**数据存储**：`~/Library/Application Support/Gapfill/state.json`
 
 ## AI 出题（可选）
 

@@ -66,7 +66,7 @@ private enum Persistence {
     static let url: URL = {
         let base = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("EnglishCloze", isDirectory: true)
+            .appendingPathComponent("Gapfill", isDirectory: true)
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         return base.appendingPathComponent("state.json")
     }()
