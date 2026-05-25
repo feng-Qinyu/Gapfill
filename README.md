@@ -140,7 +140,11 @@ Sources/
 
 ## AI 出题（可选）
 
-需要本机可用的 Codex CLI。Gapfill 会优先查找 PATH 里的 `codex`，找不到时使用 Codex 桌面应用内置的 CLI：
+需要本机可用的 Codex CLI。Gapfill 会按下面顺序查找：
+
+1. `CODEX_CLI_PATH` 环境变量
+2. PATH 里的 `codex`
+3. Codex 桌面应用内置的 CLI
 
 ```bash
 /Applications/Codex.app/Contents/Resources/codex

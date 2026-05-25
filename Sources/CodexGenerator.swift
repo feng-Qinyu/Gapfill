@@ -6,7 +6,7 @@ import Foundation
 ///
 /// Setup reminders:
 ///  • App Sandbox must be OFF (can't spawn codex / read its auth otherwise).
-///  • The bundled Codex desktop CLI is used when `codex` is not on PATH.
+///  • Set CODEX_CLI_PATH when you want Gapfill to use a specific Codex CLI.
 struct CodexGenerator {
     var difficulty = "intermediate, around CET-6 / IELTS 6.0 level"
 
@@ -73,6 +73,12 @@ struct CodexGenerator {
 
     private static func resolveCodexURL() -> URL? {
         let fileManager = FileManager.default
+
+        if let path = ProcessInfo.processInfo.environment["CODEX_CLI_PATH"],
+           fileManager.isExecutableFile(atPath: path) {
+            return URL(fileURLWithPath: path)
+        }
+
         let candidates = [
             "/opt/homebrew/bin/codex",
             "/usr/local/bin/codex",
