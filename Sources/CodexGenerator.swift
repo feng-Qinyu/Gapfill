@@ -6,9 +6,8 @@ import Foundation
 ///
 /// Setup reminders:
 ///  • App Sandbox must be OFF (can't spawn codex / read its auth otherwise).
-///  • Set `codexPath` to the output of `which codex`.
+///  • The bundled Codex desktop CLI is used when `codex` is not on PATH.
 struct CodexGenerator {
-    var codexPath = "/opt/homebrew/bin/codex"
     var difficulty = "intermediate, around CET-6 / IELTS 6.0 level"
 
     func generate(count: Int = 8) async -> [ClozeCard] {
@@ -34,7 +33,12 @@ struct CodexGenerator {
 
         return await withCheckedContinuation { continuation in
             let process = Process()
-            process.executableURL = URL(fileURLWithPath: codexPath)
+            guard let codexURL = Self.resolveCodexURL() else {
+                print("Codex launch failed: codex CLI was not found.")
+                continuation.resume(returning: nil)
+                return
+            }
+            process.executableURL = codexURL
             process.arguments = [
                 "exec", "--skip-git-repo-check",
                 "--output-schema", schemaURL.path,
@@ -65,6 +69,29 @@ struct CodexGenerator {
                 continuation.resume(returning: nil)
             }
         }
+    }
+
+    private static func resolveCodexURL() -> URL? {
+        let fileManager = FileManager.default
+        let candidates = [
+            "/opt/homebrew/bin/codex",
+            "/usr/local/bin/codex",
+            "/Applications/Codex.app/Contents/Resources/codex"
+        ]
+
+        if let path = ProcessInfo.processInfo.environment["PATH"] {
+            for directory in path.split(separator: ":") {
+                let candidate = "\(directory)/codex"
+                if fileManager.isExecutableFile(atPath: candidate) {
+                    return URL(fileURLWithPath: candidate)
+                }
+            }
+        }
+
+        for candidate in candidates where fileManager.isExecutableFile(atPath: candidate) {
+            return URL(fileURLWithPath: candidate)
+        }
+        return nil
     }
 
     private func parse(_ raw: String) -> [ClozeCard] {

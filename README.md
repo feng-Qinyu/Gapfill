@@ -121,7 +121,6 @@ launchctl load ~/Library/LaunchAgents/com.example.Gapfill.plist
 |------|------|--------|------|
 | `Coordinator.swift` | `idleThreshold` | `600` | 多少秒空闲后弹题（调成 `15` 方便调试） |
 | `Coordinator.swift` | `cooldown` | `45` | 答完一题后的冷却时间（秒） |
-| `CodexGenerator.swift` | `codexPath` | `/opt/homebrew/bin/codex` | Codex CLI 路径（`which codex` 查看） |
 | `CodexGenerator.swift` | `difficulty` | `intermediate, CET-6 / IELTS 6.0` | 出题难度（可改为「GRE 难词」「商务邮件高频词」等） |
 
 ## 项目结构
@@ -141,12 +140,18 @@ Sources/
 
 ## AI 出题（可选）
 
-需要安装并登录 [Codex CLI](https://github.com/openai/codex)：
+需要本机可用的 Codex CLI。Gapfill 会优先查找 PATH 里的 `codex`，找不到时使用 Codex 桌面应用内置的 CLI：
+
+```bash
+/Applications/Codex.app/Contents/Resources/codex
+```
+
+如果你想在终端里直接使用 `codex`，可以安装 CLI：
 
 ```bash
 npm install -g @openai/codex
 codex auth          # 登录 OpenAI
-which codex         # 复制路径填入 CodexGenerator.swift 的 codexPath
+which codex         # 确认终端可找到 codex
 ```
 
 未安装 Codex 时，app 使用内置 16 道题正常运行，不影响基础功能。
