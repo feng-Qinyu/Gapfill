@@ -1,0 +1,28 @@
+name: EnglishCloze
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+targets:
+  EnglishCloze:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.EnglishCloze
+        INFOPLIST_FILE: Resources/Info.plist
+        # App Sandbox must be OFF so the app can spawn the `codex` CLI
+        # and read its auth/config. (This also means it can't ship to the
+        # Mac App Store — fine for a personal tool.)
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_HARDENED_RUNTIME: NO
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        COMBINE_HIDPI_IMAGES: YES
