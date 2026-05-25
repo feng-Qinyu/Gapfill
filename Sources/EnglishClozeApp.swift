@@ -6,7 +6,7 @@ struct EnglishClozeApp: App {
     @StateObject private var coordinator = Coordinator()
 
     var body: some Scene {
-        MenuBarExtra("English Cloze", systemImage: "text.book.closed.fill") {
+        MenuBarExtra("Gapfill", systemImage: "text.book.closed.fill") {
             MenuContent()
                 .environmentObject(coordinator)
         }

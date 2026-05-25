@@ -1,6 +1,8 @@
-# English Cloze — 菜单栏英语完形填空
+# Gapfill — Mind the Gap
 
-> 空闲一段时间后，屏幕右上角悄悄弹出一道完形填空：一句英文挖掉一个词，配上整句中文翻译，让你填对应的英文单词。做题记录持久化，**经常做错的题会更频繁地推给你**。
+> A tiny menu-bar English practice app. Fill the missing word, check the sentence meaning, and let short idle moments turn into vocabulary review.
+
+空闲一段时间后，屏幕右上角弹出一道填空练习：一句英文挖掉一个词，配上整句中文翻译，让你填对应的英文单词。练习记录会持久化，**经常做错的题会更频繁地推给你**。
 
 ## 截图
 
@@ -130,7 +132,7 @@ Sources/
 ├── Coordinator.swift       # 空闲检测 → 决定何时弹卡
 ├── IdleMonitor.swift       # 用 CGEventSource 读系统空闲时长
 ├── PopupController.swift   # 右上角浮层面板（KeyablePanel 支持键盘输入）
-├── ClozePopupView.swift    # 完形填空卡片 UI
+├── ClozePopupView.swift    # 填空练习卡片 UI
 ├── ClozeModel.swift        # 卡片模型、内置题库、持久化、加权选题
 └── CodexGenerator.swift    # 调 Codex CLI 后台生成新题
 ```
