@@ -2,7 +2,7 @@
 
 > A tiny menu-bar English practice app. Fill the missing word, check the sentence meaning, and let short idle moments turn into vocabulary review.
 
-空闲一段时间后，屏幕右上角弹出一道填空练习：一句英文挖掉一个词，配上整句中文翻译，让你填对应的英文单词。练习记录会持久化，**经常做错的题会更频繁地推给你**。
+空闲一段时间后，屏幕右上角弹出一道填空练习：一句英文挖掉一个词，配上整句中文翻译，让你填对应的英文单词。题目会根据最近答题情况动态生成，错题和最近表现会持久化。
 
 ## 截图
 
@@ -27,7 +27,8 @@
 - 📝 **错题本**：答错或点提示的题会记录，之后答对会自动移除
 - 🧠 **加权选题**：常错的题权重更高，掌握后逐渐淡出（Leitner 算法）
 - ⌨️ **即时聚焦**：弹出后输入框自动获焦，直接打字即可
-- 🤖 **AI 出题**：后台调用 Codex CLI 实时生成初级新题，内置 16 道题保底
+- 🤖 **AI 出题**：后台调用 Codex CLI 动态生成新题，不再依赖固定内置题库
+- 🧩 **轻量上下文**：生成新题时只传最近少量答错/答对词和避开词，不上传完整历史
 - 📊 **今日统计**：菜单栏实时显示题数与正确率
 - 💾 **进度持久化**：重启后仍记得"这道我以前错过"
 
@@ -37,7 +38,7 @@
 |------|------|
 | macOS | 13.0 Ventura 及以上 |
 | 架构 | Apple Silicon（arm64） |
-| Codex CLI | 可选，用于 AI 生成新题 |
+| Codex CLI | 需要，用于动态生成新题 |
 
 ## 安装与运行
 
@@ -137,7 +138,7 @@ Sources/
 ├── IdleMonitor.swift       # 用 CGEventSource 读系统空闲时长
 ├── PopupController.swift   # 右上角浮层面板（KeyablePanel 支持键盘输入）
 ├── ClozePopupView.swift    # 填空练习卡片 UI
-├── ClozeModel.swift        # 卡片模型、内置题库、持久化、加权选题
+├── ClozeModel.swift        # 卡片模型、持久化、错题本、轻量学习上下文
 └── CodexGenerator.swift    # 调 Codex CLI 后台生成新题
 ```
 
@@ -163,7 +164,7 @@ codex auth          # 登录 OpenAI
 which codex         # 确认终端可找到 codex
 ```
 
-未安装 Codex 时，app 使用内置 16 道题正常运行，不影响基础功能。
+未安装或找不到 Codex CLI 时，app 暂时无法生成新题；配置好 Codex CLI 后会继续自动补题。
 
 ## License
 

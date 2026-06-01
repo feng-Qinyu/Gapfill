@@ -10,10 +10,31 @@ import Foundation
 struct CodexGenerator {
     var difficulty: DifficultyLevel = .beginner
 
-    func generate(count: Int = 8) async -> [ClozeCard] {
-        let prompt = """
+    func generate(count: Int = 8, context: LearningContext = LearningContext(
+        recentWrongAnswers: [],
+        recentCorrectAnswers: [],
+        avoidAnswers: []
+    )) async -> [ClozeCard] {
+        guard let json = await runCodex(prompt: prompt(count: count, context: context)) else { return [] }
+        return parse(json)
+    }
+
+    func prompt(count: Int, context: LearningContext) -> String {
+        let recentWrong = context.recentWrongAnswers.joined(separator: ", ")
+        let recentCorrect = context.recentCorrectAnswers.joined(separator: ", ")
+        let avoid = context.avoidAnswers.joined(separator: ", ")
+
+        return """
         Generate \(count) English fill-in-the-blank vocabulary exercises at a \
         \(difficulty.generatorDescription). Avoid rare, overly obscure, or exam-trick words. \
+        Create fresh, varied vocabulary across daily life, work, study, travel, feelings, \
+        objects, actions, food, time, places, and simple abstract ideas. Do not overuse \
+        common repeated examples like bag, dinner, bread, water, or shop unless they are \
+        directly needed by the compact learning context.
+        Use this compact learning context only; do not ask for or assume full history:
+        {"recentWrongAnswers":"\(recentWrong)","recentCorrectAnswers":"\(recentCorrect)","avoidAnswers":"\(avoid)"}
+        Prefer practicing a related easier word if recentWrongAnswers is non-empty. \
+        Avoid all answer words listed in avoidAnswers. \
         Return an object {"items":[...]}. Each item must have: \
         "sentence" — one natural English sentence with exactly ONE useful target \
         word replaced by "___"; "answer" — that target word (the word that fills the blank); \
@@ -25,8 +46,6 @@ struct CodexGenerator {
         easy-to-remember Chinese memory tip using this sentence or a common phrase. \
         Output only data that matches the schema.
         """
-        guard let json = await runCodex(prompt: prompt) else { return [] }
-        return parse(json)
     }
 
     private func runCodex(prompt: String) async -> String? {

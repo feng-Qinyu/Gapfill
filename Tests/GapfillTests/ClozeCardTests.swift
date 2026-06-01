@@ -2,16 +2,28 @@ import XCTest
 @testable import Gapfill
 
 final class ClozeCardTests: XCTestCase {
-    func testBuiltInCardsAreBeginnerFriendlyAndIncludeWordNotes() {
-        XCTAssertFalse(ClozeBank.all.isEmpty)
+    func testBuiltInBankIsEmptyBecauseCardsAreGeneratedAdaptively() {
+        XCTAssertTrue(ClozeBank.all.isEmpty)
+    }
 
-        for card in ClozeBank.all {
-            XCTAssertLessThanOrEqual(card.answer.count, 9)
-            XCTAssertFalse(card.wordMeaning.isEmpty)
-            XCTAssertFalse(card.phonetic.isEmpty)
-            XCTAssertFalse(card.partOfSpeech.isEmpty)
-            XCTAssertFalse(card.memoryTip.isEmpty)
+    func testLearningContextIsBounded() {
+        let deck = ClozeDeck(difficulty: .beginner, shouldRefillFromCodex: false, shouldPersist: false)
+        for index in 0..<30 {
+            let card = ClozeCard(
+                sentence: "Sample ___ sentence \(index).",
+                answer: "word\(index)",
+                hint: "示例句子。",
+                wordMeaning: "词",
+                phonetic: "/wɜːrd/",
+                partOfSpeech: "noun",
+                memoryTip: "sample tip"
+            )
+            deck.record(card: card, correct: false)
         }
+
+        let context = deck.learningContext()
+        XCTAssertLessThanOrEqual(context.recentWrongAnswers.count, 5)
+        XCTAssertLessThanOrEqual(context.avoidAnswers.count, 20)
     }
 
     func testCardKeyIncludesOnlyPromptIdentityNotMutableNotes() {
