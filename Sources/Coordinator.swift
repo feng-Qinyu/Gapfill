@@ -6,6 +6,13 @@ import Combine
 final class Coordinator: ObservableObject {
     @Published var isEnabled: Bool = true
     @Published var stats = Stats()
+    @Published var selectedDifficulty: DifficultyLevel {
+        didSet {
+            deck.setDifficulty(selectedDifficulty)
+            UserDefaults.standard.set(selectedDifficulty.rawValue, forKey: Self.difficultyDefaultsKey)
+        }
+    }
+    @Published private(set) var wrongBookEntries: [WrongBookEntry] = []
 
     /// How many seconds of no keyboard/mouse activity before a card pops up.
     /// 600 = 10 minutes. Set low (e.g. 10) while testing so you don't have to wait.
@@ -16,10 +23,18 @@ final class Coordinator: ObservableObject {
 
     private let idleMonitor = IdleMonitor()
     private let popup = PopupController()
-    private let deck = ClozeDeck()
+    private let deck: ClozeDeck
+    private var wrongBookWindow: NSWindow?
     private var cooldownUntil = Date.distantPast
+    private static let difficultyDefaultsKey = "selectedDifficulty"
 
     init() {
+        let savedDifficulty = UserDefaults.standard.string(forKey: Self.difficultyDefaultsKey)
+            .flatMap(DifficultyLevel.init(rawValue:)) ?? .beginner
+        self.selectedDifficulty = savedDifficulty
+        self.deck = ClozeDeck(difficulty: savedDifficulty)
+        self.wrongBookEntries = deck.wrongBookEntries()
+
         idleMonitor.idleThreshold = idleThreshold
         idleMonitor.onIdle = { [weak self] in
             self?.handleIdle()
@@ -32,10 +47,39 @@ final class Coordinator: ObservableObject {
         showNextCard()
     }
 
-    /// Called from the menu's "现在来一题" — bypasses cooldown.
+    /// Called from the menu's "来一题" — bypasses cooldown.
     func triggerManually() {
         guard !popup.isShowing else { return }
         showNextCard()
+    }
+
+    func showWrongBook() {
+        wrongBookEntries = deck.wrongBookEntries()
+
+        if let wrongBookWindow {
+            wrongBookWindow.contentViewController = NSHostingController(
+                rootView: WrongBookView(entries: wrongBookEntries)
+            )
+            wrongBookWindow.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let view = WrongBookView(entries: wrongBookEntries)
+        let hosting = NSHostingController(rootView: view)
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 520),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = "错题本"
+        window.contentViewController = hosting
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        wrongBookWindow = window
     }
 
     private func showNextCard() {
@@ -45,6 +89,8 @@ final class Coordinator: ObservableObject {
             card: card,
             onResult: { [weak self] correct in
                 self?.deck.record(card: card, correct: correct)
+                self?.wrongBookEntries = self?.deck.wrongBookEntries() ?? []
+                self?.refreshWrongBookWindow()
                 self?.stats.record(correct: correct)
             },
             onNext: { [weak self] in
@@ -62,5 +108,12 @@ final class Coordinator: ObservableObject {
         )
 
         popup.show { view }
+    }
+
+    private func refreshWrongBookWindow() {
+        guard let wrongBookWindow, wrongBookWindow.isVisible else { return }
+        wrongBookWindow.contentViewController = NSHostingController(
+            rootView: WrongBookView(entries: wrongBookEntries)
+        )
     }
 }

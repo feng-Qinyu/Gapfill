@@ -8,17 +8,22 @@ import Foundation
 ///  • App Sandbox must be OFF (can't spawn codex / read its auth otherwise).
 ///  • Set CODEX_CLI_PATH when you want Gapfill to use a specific Codex CLI.
 struct CodexGenerator {
-    var difficulty = "intermediate, around CET-6 / IELTS 6.0 level"
+    var difficulty: DifficultyLevel = .beginner
 
     func generate(count: Int = 8) async -> [ClozeCard] {
         let prompt = """
         Generate \(count) English fill-in-the-blank vocabulary exercises at a \
-        \(difficulty). Return an object {"items":[...]}. Each item must have: \
+        \(difficulty.generatorDescription). Avoid rare, overly obscure, or exam-trick words. \
+        Return an object {"items":[...]}. Each item must have: \
         "sentence" — one natural English sentence with exactly ONE useful target \
         word replaced by "___"; "answer" — that target word (the word that fills the blank); \
         "hint" — the complete Chinese translation of the full sentence with the blank \
         filled in (e.g. if sentence is "She was ___ to see him." and answer is "happy", \
-        hint should be "她见到他非常高兴。"). Output only data that matches the schema.
+        hint should be "她见到他非常高兴。"); "wordMeaning" — the Chinese meaning of the \
+        answer word; "phonetic" — IPA pronunciation such as "/hæpi/"; "partOfSpeech" — \
+        simple part of speech like "verb", "noun", or "adjective"; "memoryTip" — a short, \
+        easy-to-remember Chinese memory tip using this sentence or a common phrase. \
+        Output only data that matches the schema.
         """
         guard let json = await runCodex(prompt: prompt) else { return [] }
         return parse(json)
@@ -107,7 +112,15 @@ struct CodexGenerator {
             text = String(text[start...end])
         }
 
-        struct Item: Decodable { let sentence: String; let answer: String; let hint: String }
+        struct Item: Decodable {
+            let sentence: String
+            let answer: String
+            let hint: String
+            let wordMeaning: String
+            let phonetic: String
+            let partOfSpeech: String
+            let memoryTip: String
+        }
         struct Wrapper: Decodable { let items: [Item] }
 
         guard let data = text.data(using: .utf8),
@@ -117,8 +130,25 @@ struct CodexGenerator {
         }
 
         return wrapper.items
-            .filter { $0.sentence.contains("___") && !$0.answer.isEmpty }
-            .map { ClozeCard(sentence: $0.sentence, answer: $0.answer, hint: $0.hint) }
+            .filter { item in
+                item.sentence.contains("___")
+                    && !item.answer.isEmpty
+                    && item.answer.count <= 12
+                    && !item.wordMeaning.isEmpty
+                    && !item.memoryTip.isEmpty
+            }
+            .map {
+                ClozeCard(
+                    sentence: $0.sentence,
+                    answer: $0.answer,
+                    hint: $0.hint,
+                    wordMeaning: $0.wordMeaning,
+                    phonetic: $0.phonetic,
+                    partOfSpeech: $0.partOfSpeech,
+                    memoryTip: $0.memoryTip,
+                    difficulty: difficulty
+                )
+            }
     }
 
     /// JSON Schema handed to `codex exec --output-schema`. Wrapped in an object
@@ -134,11 +164,15 @@ struct CodexGenerator {
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["sentence", "answer", "hint"],
+            "required": ["sentence", "answer", "hint", "wordMeaning", "phonetic", "partOfSpeech", "memoryTip"],
             "properties": {
               "sentence": { "type": "string" },
               "answer": { "type": "string" },
-              "hint": { "type": "string" }
+              "hint": { "type": "string" },
+              "wordMeaning": { "type": "string" },
+              "phonetic": { "type": "string" },
+              "partOfSpeech": { "type": "string" },
+              "memoryTip": { "type": "string" }
             }
           }
         }

@@ -22,10 +22,12 @@
 ## 功能
 
 - 🕐 **空闲检测**：无键盘/鼠标操作超过 10 分钟后自动弹题（可调）
-- 📖 **整句翻译**：卡片下方显示完整中文翻译，而非单词释义
+- 📖 **整句翻译 + 单词讲解**：答对或点提示后显示释义、音标、词性和记忆提示
+- 🎚️ **三档难度**：可在菜单中选择初级、中级、进阶
+- 📝 **错题本**：答错或点提示的题会记录，之后答对会自动移除
 - 🧠 **加权选题**：常错的题权重更高，掌握后逐渐淡出（Leitner 算法）
 - ⌨️ **即时聚焦**：弹出后输入框自动获焦，直接打字即可
-- 🤖 **AI 出题**：后台调用 Codex CLI 实时生成新题，内置 16 道题保底
+- 🤖 **AI 出题**：后台调用 Codex CLI 实时生成初级新题，内置 16 道题保底
 - 📊 **今日统计**：菜单栏实时显示题数与正确率
 - 💾 **进度持久化**：重启后仍记得"这道我以前错过"
 
@@ -54,6 +56,7 @@ APP="$HOME/Applications/Gapfill.app"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/release/Gapfill "$APP/Contents/MacOS/"
 cp Resources/Info.plist "$APP/Contents/"
+cp Resources/AppIcon.icns "$APP/Contents/Resources/"
 codesign --force --deep --sign - "$APP"
 ```
 
@@ -101,8 +104,10 @@ launchctl load ~/Library/LaunchAgents/com.example.Gapfill.plist
 
 | 操作 | 说明 |
 |------|------|
-| **现在来一题** `⌘⇧E` | 立刻弹出一道题，不等空闲 |
+| **来一题** `⌘⇧E` | 立刻弹出一道题，不等空闲 |
 | **暂停/开启自动弹出** | 临时关闭空闲检测 |
+| **难度** | 在初级、中级、进阶之间切换 |
+| **错题本** | 查看历史错题、错题次数和单词讲解 |
 | **退出** `⌘Q` | 完全退出 |
 
 卡片操作：
@@ -111,7 +116,7 @@ launchctl load ~/Library/LaunchAgents/com.example.Gapfill.plist
 |------|------|
 | 直接打字 | 弹出后输入框自动聚焦 |
 | `Return` / 检查 | 提交答案 |
-| 看答案 | 显示正确答案（计入错误） |
+| 提示 | 显示正确答案、释义、音标、词性和记忆提示（计入错误） |
 | 再来一个 | 答完后立刻出下一题 |
 | 稍后再说 | 关闭卡片，1 小时内不再自动弹 |
 
@@ -121,7 +126,7 @@ launchctl load ~/Library/LaunchAgents/com.example.Gapfill.plist
 |------|------|--------|------|
 | `Coordinator.swift` | `idleThreshold` | `600` | 多少秒空闲后弹题（调成 `15` 方便调试） |
 | `Coordinator.swift` | `cooldown` | `45` | 答完一题后的冷却时间（秒） |
-| `CodexGenerator.swift` | `difficulty` | `intermediate, CET-6 / IELTS 6.0` | 出题难度（可改为「GRE 难词」「商务邮件高频词」等） |
+| 菜单栏 | `难度` | `初级` | 出题难度，可直接选择三档 |
 
 ## 项目结构
 

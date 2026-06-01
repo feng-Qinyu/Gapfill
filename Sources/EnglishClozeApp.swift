@@ -6,9 +6,11 @@ struct EnglishClozeApp: App {
     @StateObject private var coordinator = Coordinator()
 
     var body: some Scene {
-        MenuBarExtra("Gapfill", systemImage: "text.book.closed.fill") {
+        MenuBarExtra {
             MenuContent()
                 .environmentObject(coordinator)
+        } label: {
+            GapfillLogoMark(size: 18, colored: false)
         }
         .menuBarExtraStyle(.menu)
     }
@@ -19,18 +21,38 @@ struct MenuContent: View {
     @EnvironmentObject private var coordinator: Coordinator
 
     var body: some View {
-        Button(coordinator.isEnabled ? "暂停自动弹出" : "开启自动弹出") {
-            coordinator.isEnabled.toggle()
-        }
-
-        Button("现在来一题") {
+        Button("来一题") {
             coordinator.triggerManually()
         }
         .keyboardShortcut("e", modifiers: [.command, .shift])
 
+        Button(coordinator.isEnabled ? "暂停自动弹出" : "开启自动弹出") {
+            coordinator.isEnabled.toggle()
+        }
+
         Divider()
 
-        Text("空闲 \(Int(coordinator.idleThreshold)) 秒后弹出")
+        Menu("难度：\(coordinator.selectedDifficulty.title)") {
+            ForEach(DifficultyLevel.allCases) { difficulty in
+                Button {
+                    coordinator.selectedDifficulty = difficulty
+                } label: {
+                    HStack {
+                        Text(difficulty.title)
+                        if coordinator.selectedDifficulty == difficulty {
+                            Image(systemName: "checkmark")
+                        }
+                    }
+                }
+            }
+        }
+
+        Button("错题本（\(coordinator.wrongBookEntries.count)）") {
+            coordinator.showWrongBook()
+        }
+
+        Divider()
+
         Text("今日 \(coordinator.stats.todayCount) 题 · 正确率 \(coordinator.stats.accuracyText)")
 
         Divider()
