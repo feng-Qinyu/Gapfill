@@ -9,8 +9,8 @@
 <table>
   <tr>
     <td align="center"><b>菜单栏入口</b></td>
-    <td align="center"><b>答对效果</b></td>
-    <td align="center"><b>显示答案</b></td>
+    <td align="center"><b>答题卡片</b></td>
+    <td align="center"><b>错题本</b></td>
   </tr>
   <tr>
     <td><img src="assets/screenshot-menu.png" width="220"/></td>
