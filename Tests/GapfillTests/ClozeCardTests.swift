@@ -48,4 +48,27 @@ final class ClozeCardTests: XCTestCase {
 
         XCTAssertEqual(first.key, second.key)
     }
+
+    func testWrongCardIsReviewedAndRemovedAfterCorrectAnswer() {
+        let deck = ClozeDeck(difficulty: .beginner, shouldRefillFromCodex: false, shouldPersist: false)
+        let card = ClozeCard(
+            sentence: "She ___ home at six.",
+            answer: "arrives",
+            hint: "她六点到家。",
+            wordMeaning: "到达",
+            phonetic: "/əˈraɪvz/",
+            partOfSpeech: "verb",
+            memoryTip: "arrive home = 到家。"
+        )
+
+        deck.record(card: card, correct: false)
+        XCTAssertEqual(deck.wrongBookEntries().count, 1)
+        XCTAssertEqual(deck.todayWrongBookEntries().count, 1)
+
+        let reviewCard = deck.nextCard()
+        XCTAssertEqual(reviewCard?.key, card.key)
+
+        deck.record(card: card, correct: true)
+        XCTAssertTrue(deck.wrongBookEntries().isEmpty)
+    }
 }

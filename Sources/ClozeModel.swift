@@ -72,6 +72,10 @@ struct WrongBookEntry: Identifiable, Equatable {
     let card: ClozeCard
     let wrongCount: Int
     let lastWrongAt: Date
+
+    var isToday: Bool {
+        Calendar.current.isDateInToday(lastWrongAt)
+    }
 }
 
 struct LearningContext: Equatable {
@@ -193,6 +197,7 @@ final class ClozeDeck {
 
     private var generator: CodexGenerator
     private var isRefilling = false
+    private let shouldRefillFromCodex: Bool
 
     init(
         difficulty: DifficultyLevel = .beginner,
@@ -207,6 +212,7 @@ final class ClozeDeck {
         self.selectedDifficulty = difficulty
         self.generator = CodexGenerator(difficulty: difficulty)
         self.shouldPersist = shouldPersist
+        self.shouldRefillFromCodex = shouldRefillFromCodex
         if shouldRefillFromCodex {
             refillFromCodex(for: difficulty, count: 6)
         }
@@ -221,6 +227,11 @@ final class ClozeDeck {
     }
 
     func nextCard() -> ClozeCard? {
+        if let reviewCard = nextWrongReviewCard() {
+            lastID = reviewCard.id
+            return reviewCard
+        }
+
         let eligibleCards = cards(for: selectedDifficulty)
         if eligibleCards.count < 4 { refillFromCodex(for: selectedDifficulty, count: 6) }
         guard !eligibleCards.isEmpty else { return nil }
@@ -292,6 +303,14 @@ final class ClozeDeck {
             }
     }
 
+    func todayWrongBookEntries() -> [WrongBookEntry] {
+        wrongBookEntries().filter(\.isToday)
+    }
+
+    func historyWrongBookEntries() -> [WrongBookEntry] {
+        wrongBookEntries().filter { !$0.isToday }
+    }
+
     func learningContext() -> LearningContext {
         let recentWrong = uniqueAnswers(
             recentAttempts
@@ -324,6 +343,31 @@ final class ClozeDeck {
 
     private func cards(for difficulty: DifficultyLevel) -> [ClozeCard] {
         cards.filter { $0.difficulty == difficulty }
+    }
+
+    private func nextWrongReviewCard() -> ClozeCard? {
+        let reviewEntries = wrongBookEntries()
+            .filter { $0.card.difficulty == selectedDifficulty }
+        guard !reviewEntries.isEmpty else { return nil }
+
+        let eligibleCards = cards(for: selectedDifficulty)
+        let shouldForceReview = eligibleCards.isEmpty
+        let shouldReviewNow = Double.random(in: 0..<1) < 0.35
+        guard shouldForceReview || shouldReviewNow else { return nil }
+
+        let weights = reviewEntries.map { entry -> Double in
+            let ageHours = max(Date().timeIntervalSince(entry.lastWrongAt) / 3600, 0)
+            return Double(entry.wrongCount) + min(ageHours / 12, 4) + (entry.isToday ? 0 : 1.5)
+        }
+        let total = weights.reduce(0, +)
+        guard total > 0 else { return reviewEntries.randomElement()?.card }
+
+        var r = Double.random(in: 0..<total)
+        for (index, entry) in reviewEntries.enumerated() {
+            r -= weights[index]
+            if r < 0 { return entry.card }
+        }
+        return reviewEntries.first?.card
     }
 
     private func uniqueAnswers(_ answers: [String], limit: Int) -> [String] {
@@ -408,6 +452,7 @@ final class ClozeDeck {
     }
 
     private func refillFromCodex(for difficulty: DifficultyLevel, count: Int) {
+        guard shouldRefillFromCodex else { return }
         guard !isRefilling else { return }
         isRefilling = true
         let generator = CodexGenerator(difficulty: difficulty)
@@ -417,7 +462,7 @@ final class ClozeDeck {
             await MainActor.run {
                 if !fresh.isEmpty {
                     self.mergeIn(fresh)
-                    self.persist()       // persist generated cards so they survive restart
+                    self.persist()
                 }
                 self.isRefilling = false
             }

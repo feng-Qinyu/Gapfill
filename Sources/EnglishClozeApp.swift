@@ -20,6 +20,14 @@ struct EnglishClozeApp: App {
 struct MenuContent: View {
     @EnvironmentObject private var coordinator: Coordinator
 
+    private var todayWrongCount: Int {
+        coordinator.wrongBookEntries.filter(\.isToday).count
+    }
+
+    private var historyWrongCount: Int {
+        coordinator.wrongBookEntries.filter { !$0.isToday }.count
+    }
+
     var body: some View {
         Button("来一题") {
             coordinator.triggerManually()
@@ -47,7 +55,7 @@ struct MenuContent: View {
             }
         }
 
-        Button("错题本（\(coordinator.wrongBookEntries.count)）") {
+        Button("错题本（今日 \(todayWrongCount) · 历史 \(historyWrongCount)）") {
             coordinator.showWrongBook()
         }
 
